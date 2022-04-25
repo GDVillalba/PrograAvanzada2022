@@ -7,7 +7,7 @@
 #if SERIAL_DEBUG_ENABLED
   #define DebugPrint(str)\
     {\
-        Serial.println(str);\
+       Serial.println(str);\
     }
 #else
   #define DebugPrint(str)
@@ -15,22 +15,22 @@
 
 #define DebugPrintEstado(estado,evento)\
     {\
-        String est = estado;\
-        String evt = evento;\
-        String str;\
-        str = "-----------------------------------------------------";\
-        DebugPrint(str);\
-        str = "De Estado: [ " + est + " ] y Evento: [ " + evt + " ] pasa a ->";\
-        DebugPrint(str);\
-        str = "-----------------------------------------------------";\
-        DebugPrint(str);\
+       String est = estado;\
+       String evt = evento;\
+       String str;\
+       str = "-----------------------------------------------------";\
+       DebugPrint(str);\
+       str = "De Estado: [ " + est + " ] y Evento: [ " + evt + " ] pasa a ->";\
+       DebugPrint(str);\
+       str = "-----------------------------------------------------";\
+       DebugPrint(str);\
     }
 #define DebugPrintEstadoActual(estado)\
     {\
-        String est = estado;\
-        String str;\
-        str = "Estado actual: [ " + estado + " ].";\
-        DebugPrint(str);\
+       String est = estado;\
+       String str;\
+       str = "Estado actual: [ " + estado + " ].";\
+       DebugPrint(str);\
     }
 //----------------------------------------------
 // Para pasar el valor del sensor TMP36 a grados centigrados
@@ -55,16 +55,14 @@
 
 //----------------------------------------------
 // Constantes 
+#define SERIAL_SPEED                         9600
+
 #define MAX_TERMOSTATO                         35
 #define INIT_TERMOSTATO                        24
 #define MIN_TERMOSTATO                         18
 #define MAX_VELOCIDAD                           3
 #define MIN_VELOCIDAD                           1
 #define DELTA_VELOCIDAD     (255 / MAX_VELOCIDAD)
-
-#define CONT_TIMER_REINICIO                     0
-#define SEGUNDOS_TIMER                          1
-#define CONT_TIMER_MAX      (30 * SEGUNDOS_TIMER)
 
 #define CANT_SENSORES                           5
 #define SENSOR_TEMPERATURA                      0
@@ -78,21 +76,31 @@
 #define FILAS_LCD                               2
 #define DELTA_TIMEOUT                          50
 
+//Calculo TIMER_FACTOR1024 = ((16000000 * (t/1000) ) / 1024) - 1
+#define TIMER_FACTOR1024(t)  (long)(((float)15.625 * t) -1)
+
+//Tiempo en milisegundos para configurar la interrupción del timer 1
+#define TIEMPO_MAX_MILIS 1000
+// Para configurar en cero al registro TCCR1A
+#define CONFIG_TCCR1A_0                0b00000000
+// Para configurar el registro TCCR1B, compara con OCR1A y usa factor escala 1024.
+#define CONFIG_TCCR1B_OCR1A_1024       0b00001101
+
 //----------------------------------------------
 // Definicion de estructuras
 //----------------------------------------------
 struct st_valores_globales
-{
+  {
     int Temperatura;
     int Termostato;
     int Velocidad;
-};
+  };
 
 struct stSensor
-{
+  {
     int  pin;
     int valor;
-};
+  };
 
 //----------------------------------------------
 // Variables Globales
@@ -121,7 +129,7 @@ String events_s [] = {"EV_CONT"  ,"EV_UPDATE_TEMP"  ,"EV_ON_OFF"  ,"EV_CAMBIO_VE
 typedef void (*transition)();
 
 transition state_table[MAX_STATES][MAX_EVENTS] =
-{
+  {
       {init_    , error           , error         , error               , error         , error       } , // state ST_INIT
       {none     , update_temp     , activar       , none                , none          , none        } , // state ST_REPOSO
       {none     , check_v_on      , reposar       , update_vel          , t_abajo       , t_arriba    } , // state ST_ACTIVO_ON
@@ -129,7 +137,7 @@ transition state_table[MAX_STATES][MAX_EVENTS] =
       {error    , error           , error         , error               , error         , error       }   // state ST_ERROR
       
      //EV_CONT  , EV_UPDATE_TEMP  , EV_ON_OFF     , EV_CAMBIO_VELOCIDAD , EV_TERM_DOWN  , EV_TERM_UP
-};
+  };
 
 //----------------------------------------------
 //###############################################
@@ -139,25 +147,24 @@ transition state_table[MAX_STATES][MAX_EVENTS] =
 
 //Inicializacion del temporizador por HW
 void inicializar_timer_por_HW()
-{  
-    // Limpiar el registro que guarda la cuenta del Timer-1
-    TCNT1 = 0;                               
+  {                           
     // El pin OC1A cambia de estado tras la comparación.
-    TCCR1A = 0b00000000;
-    // Usa el registro OCR1A para comparar y factor escala 8.
-    TCCR1B = 0b00001101;
+    TCCR1A = CONFIG_TCCR1A_0;
+    // Usa el registro OCR1A para comparar y factor escala 1024.
+    TCCR1B = CONFIG_TCCR1B_OCR1A_1024;
     // Para que la interrupción ocurra al segundo.
-    OCR1A = 15624;
+    OCR1A = TIMER_FACTOR1024( TIEMPO_MAX_MILIS );
     // Se utilizara la interrupción timer1 por comparación.
     TIMSK1 = bit(OCIE1A);
     // Habilita las interrupciones globales.
     sei();
-}
+  }
 
 //Funcion que lanza el temporizador por HW, se ejecuta cada 1 segundo aproximadamente.
-ISR(TIMER1_COMPA_vect){
+ISR(TIMER1_COMPA_vect)
+  {
     leerTemperatura();
-}
+  }
 
 //----------------------------------------------
 //##########################################################
@@ -165,9 +172,9 @@ ISR(TIMER1_COMPA_vect){
 //##########################################################
 //----------------------------------------------
 void do_init()
-{
+  {
     //inicia Monitor en serie
-    Serial.begin(9600);
+    Serial.begin(SERIAL_SPEED);
     
     //inicia pines de pulsadores
     pinMode(PIN_PULSADOR_ON_OFF, INPUT);
@@ -214,15 +221,17 @@ void do_init()
     lct     = millis();
     dibujarDisplayOff();
     inicializar_timer_por_HW();
-}
+  }
 
 //----------------------------------------------------------
 //#########################################
 //### Funciones para dibujar el Display ###
 //#########################################
 //----------------------------------------------------------
+
+//Dibuja el display cuando el sistema esta en estado ST_ACTIVO_ON
 void dibujarDisplayOn()
-{
+  {
     lcd.setCursor(0,0);
     lcd.print("Vel:");
     lcd.print(value.Velocidad);
@@ -234,10 +243,11 @@ void dibujarDisplayOn()
     lcd.print("Temperatura:    ");
     lcd.setCursor(13,1); 
     lcd.print(value.Temperatura); 
-}
+  }
 
+//Dibuja el display cuando el sistema esta en estado ST_ACTIVO_OFF
 void dibujarDisplayOff()
-{
+  {
     lcd.setCursor(0,0);
     lcd.print("                ");
     lcd.setCursor(0,1);
@@ -245,288 +255,303 @@ void dibujarDisplayOff()
     lcd.print("Temperatura:    ");
     lcd.setCursor(13,1);
     lcd.print(value.Temperatura); 
-}
+  }
 
 //----------------------------------------------------------
 //##################################################
 //### Funciones que modifican variables globales ###
 //##################################################
 //----------------------------------------------------------
+
+//Actualiza el valor de la variable global de temperatura
 void leerTemperatura()
-{
+  {
     value.Temperatura = pasarAGradosCelsius(analogRead(PIN_SENSOR_TEMPERATURA));
-}
+  }
 //----------------------------------------------------------
 void cambioVelocidad()
-{
+  {
     //Incrementa Velocidad en 1
     value.Velocidad = value.Velocidad + 1;
     //Si supera maxima velocidad vuelve al minimo
     if(value.Velocidad > MAX_VELOCIDAD)
-    {
+      {
         value.Velocidad = MIN_VELOCIDAD;
-    }
+      }
     //establece la velocidad en el motor
     analogWrite(PIN_TRANSISTOR_MOTOR, value.Velocidad * DELTA_VELOCIDAD);    
-}
+  }
 //----------------------------------------------------------
 void termostatoMenos()
-{
+  {
     //Decremento el termostato solo si no es el minimo
     if(value.Termostato > MIN_TERMOSTATO)
         value.Termostato--;
-}
+  }
 
 //----------------------------------------------------------
 void termostatoMas()
-{
+  {
     //Incremento el termostato solo si no es el maximo
     if(value.Termostato < MAX_TERMOSTATO)
         value.Termostato++;
-}
+  }
 //----------------------------------------------------------
 //########################################################
 //### Funciones verificar eventos (para get_new_event) ###
 //########################################################
 //----------------------------------------------------------
 bool verificarTemperatura()
-{
+  {
     //Verifica si la temperatura cambio, para disparar el EV_UPDATE_TEMP
     if( value.Temperatura != sensores[SENSOR_TEMPERATURA].valor)
-    {
+      {
         sensores[SENSOR_TEMPERATURA].valor = value.Temperatura;
         new_event = EV_UPDATE_TEMP;
         return true;
-    }
+      }
     
     return false;
-}
+  }
 //----------------------------------------------------------
 bool verificarOnOff()
-{
-    //Si el pulsador se presiona dispara el evento
+  {
+    //Si el pulsador en PIN_PULSADOR_ON_OFF se presiona dispara el evento
     if(pulsadorPresionado(SENSOR_PULSADOR_ON_OFF))
-    {
+      {
         new_event = EV_ON_OFF;
         return true;
-    }
+      }
     return false;
-}
+  }
 //----------------------------------------------------------
 bool verificarVel()
-{
-    //Si el pulsador se presiona dispara el evento
+  {
+    //Si el pulsador en PIN_PULSADOR_VELOCIDAD se presiona dispara el evento
     if(pulsadorPresionado(SENSOR_PULSADOR_VELOCIDAD))
-    {
+      {
         new_event = EV_CAMBIO_VELOCIDAD;
         return true;
-    }
+      }
     return false;
-}
+  }
 //----------------------------------------------------------
 bool verificarTerMenos()
-{
-    //Si el pulsador se presiona dispara el evento
+  {
+    //Si el pulsador en PIN_PULSADOR_MENOS se presiona dispara el evento
     if(pulsadorPresionado(SENSOR_PULSADOR_TERMOSTATO_MENOS))
-    {
+      {
         new_event = EV_TERM_DOWN;
         return true;
-    }
+      }
     return false;
-}
+  }
 //----------------------------------------------------------
 bool verificarTerMas()
-{
-    //Si el pulsador se presiona dispara el evento
+  {
+    //Si el pulsador en PIN_PULSADOR_MAS se presiona dispara el evento
     if(pulsadorPresionado(SENSOR_PULSADOR_TERMOSTATO_MAS))
-    {
+      {
         new_event = EV_TERM_UP;
         return true;
-    }
+      }
     return false;
-}
+  }
 //----------------------------------------------------------
+//Verifica que un pulsador se presione, solo envia true al detectar un cambio de LOW a HIGH
 bool pulsadorPresionado(int pulsador)
-{
+  {
     int lectura = digitalRead(sensores[pulsador].pin);
     //Verifica si hay cambio de estado en el pin
     if(sensores[pulsador].valor != lectura)
-    {
+      {
         //Si cambio el estado se actualiza
         sensores[pulsador].valor = lectura;
         //verifico que sea un cambio de LOW a HIGH
         if( lectura == HIGH )
-        {
+          {
             return true;
-        }
-    }
+          }
+      }
     return false;
-}
+  }
 //----------------------------------------------------------
 //############################
 //### Funciones transition ###
 //############################
 //----------------------------------------------------------
+//Inicializa el primer estado de ST_INIT a ST_REPOSO
 void init_()
-{
+  {
     DebugPrintEstado(states_s[current_state], events_s[new_event]);
     
     current_state = ST_REPOSO;
     
     DebugPrintEstadoActual(states_s[current_state]);
-}
+  }
 //----------------------------------------------------------
 void error()
-{
+  {
     Serial.println("#######   ERROR   ###########");
-}
+  }
 //----------------------------------------------------------
 void none()
-{
+  {
     //No hace nada.
-}
+  }
 //----------------------------------------------------------
+//Funcion que actualiza la temperatura en el display cuando el sistema esta en estado ST_REPOSO
 void update_temp()
-{
+  {
     //Actualizar display
     dibujarDisplayOff();
-}
+  }
 //----------------------------------------------------------
+//Funcion para pasar del estado ST_REPOSO a alguno de los estados ST_ACTIVO_OFF o ST_ACTIVO_ON
 void activar()
-{
-    //si la Temperatura del termostato se alcanzo, apago el motor
+  {
+    //si la Temperatura del termostato es menor a la temperatura del sensor, se prende el motor, sino se apaga 
     if(value.Temperatura > value.Termostato )
-    {
+      {
         //Prendo motor y cambio a estado ST_ACTIVO_ON
         digitalWrite( PIN_TRANSISTOR_ON_OFF , HIGH);
         current_state = ST_ACTIVO_ON;
-    }else{
+      }else{
         //Apago motor y cambio a estado ST_ACTIVO_OFF
         digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
         current_state = ST_ACTIVO_OFF;
-    }
+      }
     //Actualizar display
     dibujarDisplayOn();
-}
+  }
 //----------------------------------------------------------
+//Funcion que se lanza al detectar un cambio de temperatura en el estado ST_ACTIVO_ON, puede provocar un cambio de estado a ST_ACTIVO_OFF
 void check_v_on()
-{
+  {
     //si la Temperatura del termostato se alcanzo, apago el motor
     if(value.Temperatura <= value.Termostato )
-    {
+      {
         //Apago motor y cambio a estado ST_ACTIVO_OFF
         digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
         current_state = ST_ACTIVO_OFF;
-    }
+      }
     //Actualizar display
     dibujarDisplayOn();
-}
+  }
 //----------------------------------------------------------
+//Funcion que se lanza al detectar un cambio de temperatura en el estado ST_ACTIVO_OFF, puede provocar un cambio de estado a ST_ACTIVO_ON
 void check_v_off()
-{
+  {
     //si la Temperatura del termostato se alcanzo, apago el motor
     if(value.Temperatura > value.Termostato )
-    {
+      {
         //Prendo motor y cambio a estado ST_ACTIVO_ON
         digitalWrite( PIN_TRANSISTOR_ON_OFF , HIGH);
         current_state = ST_ACTIVO_ON;
-    }
+      }
     //Actualizar display
     dibujarDisplayOn();
-}
+  }
 //----------------------------------------------------------
+//Funcion para pasar de cualquiera de los estados ST_ACTIVO_OFF o ST_ACTIVO_ON, al estado ST_REPOSO
 void reposar()
-{
+  {
     //Apago motor y cambio a estado ST_REPOSO
     digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
     current_state = ST_REPOSO;
     //Actualizar display
     dibujarDisplayOff();
-}
+  }
 //----------------------------------------------------------
+//Cambia la velocidad y actualiza el display
 void update_vel()
-{
+  {
     cambioVelocidad();
+    //Actualizar display
     dibujarDisplayOn();
-}
+  }
 //----------------------------------------------------------
+//Decrementa el termostato y actualiza el display
 void t_abajo()
-{
+  {
     termostatoMenos();
     activar();
     //Actualizar display
     dibujarDisplayOn();
-}  
+  }  
 //----------------------------------------------------------
+//Incrementa el termostato y actualiza el display
 void t_arriba()
-{
+  {
     termostatoMas();
     activar();
     //Actualizar display
     dibujarDisplayOn();
-}
+  }
 //----------------------------------------------------------
 //################################################
 //### Funciones generales de estados y eventos ###
 //################################################
 //----------------------------------------------
 void get_new_event( )
-{
+  {
     long ct = millis();
     int  diferencia = (ct - lct);
     timeout = (diferencia > DELTA_TIMEOUT)? (true):(false);
     
     if( timeout )
-    {
+      {
         // Doy acuse de la recepcion del timeout
         timeout = false;
         lct     = ct;
         
         if( (verificarTemperatura() == true) || (verificarOnOff() == true) || (verificarVel() == true) || (verificarTerMenos() == true) || (verificarTerMas() == true) )
-        {
+          {
             return;
-        }
-    }
+          }
+      }
   
     // Genero evento dummy ....
     new_event = EV_CONT;
-}
+  }
 //----------------------------------------------
 void maquina_de_estados()
-{
+  {
     get_new_event();
     
     if( (new_event >= 0) && (new_event < MAX_EVENTS) && (current_state >= 0) && (current_state < MAX_STATES) )
-    {
+      {
         if( new_event != EV_CONT )
-        {
+          {
             DebugPrintEstado(states_s[current_state], events_s[new_event]);
-        }
+          }
         
         state_table[current_state][new_event]();
         
         if( new_event != EV_CONT )
-        {
+          {
             DebugPrintEstadoActual(states_s[current_state]);
-        }
-    }
+          }
+      }
     else
-    {
+      {
         DebugPrintEstado(states_s[ST_ERROR], events_s[EV_UNKNOW]);
-    }
+      }
   
     // Consumo el evento...
     new_event   = EV_CONT;
-}
+  }
 //----------------------------------------------
 //############################
 //### Funciones de Arduino ###
 //############################
 //----------------------------------------------
-void setup() {
+void setup()
+  {
     do_init(); 
-}
+  }
 //----------------------------------------------
-void loop() {
+void loop()
+  {
     maquina_de_estados();  
-}
+  }

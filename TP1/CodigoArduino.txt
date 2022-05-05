@@ -63,6 +63,9 @@
 #define MAX_VELOCIDAD                           3
 #define MIN_VELOCIDAD                           1
 #define DELTA_VELOCIDAD     (255 / MAX_VELOCIDAD)
+#define MOTOR_REPOSO                            0
+#define MOTOR_APAGADO                           1
+#define MOTOR_ENCENDIDO                         2
 
 #define CANT_SENSORES                           5
 #define SENSOR_TEMPERATURA                      0
@@ -74,6 +77,11 @@
 #define VALOR_0                                 0
 #define COLUMNAS_LCD                           16
 #define FILAS_LCD                               2
+#define LCD_COLUMNA_0                           0
+#define LCD_COLUMNA_8                           8
+#define LCD_COLUMNA_13                         13
+#define LCD_FILA_0                              0
+#define LCD_FILA_1                              1
 #define DELTA_TIMEOUT                          50
 
 //Calculo TIMER_FACTOR1024 = ((16000000 * (t/1000) ) / 1024) - 1
@@ -101,12 +109,20 @@ struct stSensor
     int  pin;
     int valor;
   };
+  
+  struct stMotor
+  {
+    int pin_velocidad;
+    int pin_on_off;
+	int estado;
+  };
 
 //----------------------------------------------
 // Variables Globales
 //----------------------------------------------
 st_valores_globales value;
 stSensor sensores[CANT_SENSORES];
+stMotor motor;
 
 //declaracion e inicializacion de la variable LiquidCrystal para controlar el display.
 LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7);
@@ -120,23 +136,23 @@ long lct;
 enum states          { ST_INIT   , ST_REPOSO   ,  ST_ACTIVO_ON   , ST_ACTIVO_OFF   , ST_ERROR   } current_state;
 String states_s [] = {"ST_INIT"  ,"ST_REPOSO"  , "ST_ACTIVO_ON"  ,"ST_ACTIVO_OFF"  ,"ST_ERROR"  };
 
-enum events          { EV_CONT   , EV_UPDATE_TEMP   , EV_ON_OFF   , EV_CAMBIO_VELOCIDAD   , EV_TERM_DOWN   , EV_TERM_UP   , EV_UNKNOW  } new_event;
-String events_s [] = {"EV_CONT"  ,"EV_UPDATE_TEMP"  ,"EV_ON_OFF"  ,"EV_CAMBIO_VELOCIDAD"  ,"EV_TERM_DOWN"  ,"EV_TERM_UP"  ,"EV_UNKNOW" };
+enum events          { EV_CONT   , EV_UPDATE_TEMP   , EV_ON_OFF   , EV_CAMBIO_VELOCIDAD   , EV_TERM_DOWN   , EV_TERM_UP   ,EV_MOTOR_CAMBIAR   , EV_UNKNOW  } new_event;
+String events_s [] = {"EV_CONT"  ,"EV_UPDATE_TEMP"  ,"EV_ON_OFF"  ,"EV_CAMBIO_VELOCIDAD"  ,"EV_TERM_DOWN"  ,"EV_TERM_UP"  ,"EV_MOTOR_CAMBIAR" ,"EV_UNKNOW" };
 
 #define MAX_STATES 5
-#define MAX_EVENTS 6
+#define MAX_EVENTS 7
 
 typedef void (*transition)();
 
 transition state_table[MAX_STATES][MAX_EVENTS] =
   {
-      {init_    , error           , error         , error               , error         , error       } , // state ST_INIT
-      {none     , update_temp     , activar       , none                , none          , none        } , // state ST_REPOSO
-      {none     , check_v_on      , reposar       , update_vel          , t_abajo       , t_arriba    } , // state ST_ACTIVO_ON
-      {none     , check_v_off     , reposar       , update_vel          , t_abajo       , t_arriba    } , // state ST_ACTIVO_OFF
-      {error    , error           , error         , error               , error         , error       }   // state ST_ERROR
+      {init_    , error           , error         , error               , error         , error       , error        } , // state ST_INIT
+      {none     , update_temp     , activar       , none                , none          , none        , none         } , // state ST_REPOSO
+      {none     , update_temp_on  , reposar       , update_vel          , t_abajo       , t_arriba    , apagar_motor } , // state ST_ACTIVO_ON
+      {none     , update_temp_on  , reposar       , update_vel          , t_abajo       , t_arriba    , prender_motor} , // state ST_ACTIVO_OFF
+      {error    , error           , error         , error               , error         , error       , none         }   // state ST_ERROR
       
-     //EV_CONT  , EV_UPDATE_TEMP  , EV_ON_OFF     , EV_CAMBIO_VELOCIDAD , EV_TERM_DOWN  , EV_TERM_UP
+     //EV_CONT  , EV_UPDATE_TEMP  , EV_ON_OFF     , EV_CAMBIO_VELOCIDAD , EV_TERM_DOWN  , EV_TERM_UP  ,EV_MOTOR_CAMBIAR
   };
 
 //----------------------------------------------
@@ -182,9 +198,14 @@ void do_init()
     pinMode(PIN_PULSADOR_MENOS, INPUT);
     pinMode(PIN_PULSADOR_MAS, INPUT);
     
-    //inicia pines de transistores
-    pinMode(PIN_TRANSISTOR_MOTOR, OUTPUT);
-    pinMode(PIN_TRANSISTOR_ON_OFF, OUTPUT);
+    //inicia estructura de motor
+	motor.pin_velocidad = PIN_TRANSISTOR_MOTOR;
+	motor.pin_on_off = PIN_TRANSISTOR_ON_OFF;
+	motor.estado = MOTOR_REPOSO;
+	
+	//inicia pines para controlar el motor
+    pinMode(motor.pin_velocidad, OUTPUT);
+    pinMode(motor.pin_on_off, OUTPUT);
     
     //inicia valores iniciales
     leerTemperatura();
@@ -208,7 +229,8 @@ void do_init()
     sensores[SENSOR_PULSADOR_TERMOSTATO_MAS].valor = VALOR_0;
     
     //escribe estado inicial del motor
-    analogWrite(PIN_TRANSISTOR_MOTOR, value.Velocidad * DELTA_VELOCIDAD);
+	digitalWrite( motor.pin_on_off , LOW);
+    analogWrite(motor.pin_velocidad, value.Velocidad * DELTA_VELOCIDAD);
     
     //inicio el display
     lcd.begin(COLUMNAS_LCD, FILAS_LCD);
@@ -232,28 +254,28 @@ void do_init()
 //Dibuja el display cuando el sistema esta en estado ST_ACTIVO_ON
 void dibujarDisplayOn()
   {
-    lcd.setCursor(0,0);
+    lcd.setCursor(LCD_COLUMNA_0,LCD_FILA_0);
     lcd.print("Vel:");
     lcd.print(value.Velocidad);
-    lcd.setCursor(8,0);
+    lcd.setCursor(LCD_COLUMNA_8,LCD_FILA_0);
     lcd.print(" Ter: ");
     lcd.print(value.Termostato);
-    lcd.setCursor(0,1);
+    lcd.setCursor(LCD_COLUMNA_0,LCD_FILA_1);
     //imprime espacios de mas para borrar la temperatura anterior
     lcd.print("Temperatura:    ");
-    lcd.setCursor(13,1); 
+    lcd.setCursor(LCD_COLUMNA_13,LCD_FILA_1); 
     lcd.print(value.Temperatura); 
   }
 
 //Dibuja el display cuando el sistema esta en estado ST_ACTIVO_OFF
 void dibujarDisplayOff()
   {
-    lcd.setCursor(0,0);
+    lcd.setCursor(LCD_COLUMNA_0,LCD_FILA_0);
     lcd.print("                ");
-    lcd.setCursor(0,1);
+    lcd.setCursor(LCD_COLUMNA_0,LCD_FILA_1);
     //imprime espacios de mas para borrar la temperatura anterior
     lcd.print("Temperatura:    ");
-    lcd.setCursor(13,1);
+    lcd.setCursor(LCD_COLUMNA_13,LCD_FILA_1);
     lcd.print(value.Temperatura); 
   }
 
@@ -279,7 +301,7 @@ void cambioVelocidad()
         value.Velocidad = MIN_VELOCIDAD;
       }
     //establece la velocidad en el motor
-    analogWrite(PIN_TRANSISTOR_MOTOR, value.Velocidad * DELTA_VELOCIDAD);    
+    analogWrite(motor.pin_velocidad, value.Velocidad * DELTA_VELOCIDAD);    
   }
 //----------------------------------------------------------
 void termostatoMenos()
@@ -375,6 +397,19 @@ bool pulsadorPresionado(int pulsador)
       }
     return false;
   }
+  
+  bool verificarUmbralTermostato()
+  {
+    //Verifico si hay que cambiar el estado del motor en base al termostato y la temperatura
+    if( (motor.estado == MOTOR_APAGADO && value.Termostato < value.Temperatura) || (motor.estado == MOTOR_ENCENDIDO && value.Termostato >= value.Temperatura) )
+      {
+        new_event = EV_MOTOR_CAMBIAR;
+        return true;
+      }
+	  
+    return false;
+  }
+  
 //----------------------------------------------------------
 //############################
 //### Funciones transition ###
@@ -406,49 +441,43 @@ void update_temp()
     //Actualizar display
     dibujarDisplayOff();
   }
+  //Funcion que actualiza la temperatura en el display cuando el sistema esta en estado ST_ACTIVO_OFF o ST_ACTIVO_ON
+void update_temp_on()
+  {
+    //Actualizar display
+    dibujarDisplayOn();
+  }
 //----------------------------------------------------------
-//Funcion para pasar del estado ST_REPOSO a alguno de los estados ST_ACTIVO_OFF o ST_ACTIVO_ON
+//Funcion para pasar del estado ST_REPOSO a alguno de los estados ST_ACTIVO_OFF
 void activar()
   {
-    //si la Temperatura del termostato es menor a la temperatura del sensor, se prende el motor, sino se apaga 
-    if(value.Temperatura > value.Termostato )
-      {
-        //Prendo motor y cambio a estado ST_ACTIVO_ON
-        digitalWrite( PIN_TRANSISTOR_ON_OFF , HIGH);
-        current_state = ST_ACTIVO_ON;
-      }else{
-        //Apago motor y cambio a estado ST_ACTIVO_OFF
-        digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
-        current_state = ST_ACTIVO_OFF;
-      }
+	motor.estado = MOTOR_APAGADO;
+    current_state = ST_ACTIVO_OFF;
+    
     //Actualizar display
     dibujarDisplayOn();
   }
 //----------------------------------------------------------
-//Funcion que se lanza al detectar un cambio de temperatura en el estado ST_ACTIVO_ON, puede provocar un cambio de estado a ST_ACTIVO_OFF
-void check_v_on()
+//Funcion que se lanza cuando hay que apagar el motor porque se alcanzo la temperatura del termostato pasa de el estado ST_ACTIVO_ON, al estado ST_ACTIVO_OFF
+void apagar_motor()
   {
-    //si la Temperatura del termostato se alcanzo, apago el motor
-    if(value.Temperatura <= value.Termostato )
-      {
-        //Apago motor y cambio a estado ST_ACTIVO_OFF
-        digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
-        current_state = ST_ACTIVO_OFF;
-      }
+    //Apago motor y cambio a estado ST_ACTIVO_OFF
+    digitalWrite( motor.pin_on_off , LOW);
+	motor.estado = MOTOR_APAGADO;
+    current_state = ST_ACTIVO_OFF;
+    
     //Actualizar display
     dibujarDisplayOn();
   }
 //----------------------------------------------------------
-//Funcion que se lanza al detectar un cambio de temperatura en el estado ST_ACTIVO_OFF, puede provocar un cambio de estado a ST_ACTIVO_ON
-void check_v_off()
+//Funcion que se lanza cuando hay que prender el motor porque la temperatura del termostato es menor a la temperatura actual, pasa de el estado ST_ACTIVO_OFF, al estado ST_ACTIVO_ON
+void prender_motor()
   {
-    //si la Temperatura del termostato se alcanzo, apago el motor
-    if(value.Temperatura > value.Termostato )
-      {
-        //Prendo motor y cambio a estado ST_ACTIVO_ON
-        digitalWrite( PIN_TRANSISTOR_ON_OFF , HIGH);
-        current_state = ST_ACTIVO_ON;
-      }
+    //Prendo motor y cambio a estado ST_ACTIVO_ON
+    digitalWrite( motor.pin_on_off , HIGH);
+	motor.estado = MOTOR_ENCENDIDO;
+    current_state = ST_ACTIVO_ON;
+    
     //Actualizar display
     dibujarDisplayOn();
   }
@@ -457,7 +486,8 @@ void check_v_off()
 void reposar()
   {
     //Apago motor y cambio a estado ST_REPOSO
-    digitalWrite( PIN_TRANSISTOR_ON_OFF , LOW);
+    digitalWrite( motor.pin_on_off , LOW);
+	motor.estado = MOTOR_REPOSO;
     current_state = ST_REPOSO;
     //Actualizar display
     dibujarDisplayOff();
@@ -475,7 +505,6 @@ void update_vel()
 void t_abajo()
   {
     termostatoMenos();
-    activar();
     //Actualizar display
     dibujarDisplayOn();
   }  
@@ -484,7 +513,6 @@ void t_abajo()
 void t_arriba()
   {
     termostatoMas();
-    activar();
     //Actualizar display
     dibujarDisplayOn();
   }
@@ -505,7 +533,7 @@ void get_new_event( )
         timeout = false;
         lct     = ct;
         
-        if( (verificarTemperatura() == true) || (verificarOnOff() == true) || (verificarVel() == true) || (verificarTerMenos() == true) || (verificarTerMas() == true) )
+        if( (verificarTemperatura() == true) || (verificarOnOff() == true) || (verificarVel() == true) || (verificarTerMenos() == true) || (verificarTerMas() == true) || (verificarUmbralTermostato() == true))
           {
             return;
           }

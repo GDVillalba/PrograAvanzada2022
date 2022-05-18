@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/btnDisminuirV"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".mPrincipal_act">
+
+    <TextView
+        android:id="@+id/txtUmbral"
+        android:layout_width="85dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="44dp"
+        app:layout_constraintStart_toEndOf="@+id/labelUmbral"
+        app:layout_constraintTop_toBottomOf="@+id/txtTempAmb" />
+
+    <TextView
+        android:id="@+id/txtVel"
+        android:layout_width="85dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="84dp"
+        android:layout_marginTop="48dp"
+        app:layout_constraintStart_toEndOf="@+id/labelVel"
+        app:layout_constraintTop_toBottomOf="@+id/txtUmbral" />
+
+    <TextView
+        android:id="@+id/labelTempA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="96dp"
+        android:text="Temp. ambiente"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/labelUmbral"
+        android:layout_width="132dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="44dp"
+        android:text="umbral Termostato"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelTempA" />
+
+    <TextView
+        android:id="@+id/labelVel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="60dp"
+        android:text="Velocidad FAN"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelUmbral" />
+
+    <Switch
+        android:id="@+id/off_on"
+        android:layout_width="128dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="164dp"
+        android:text="OFF/ON"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtVel" />
+
+    <TextView
+        android:id="@+id/txtTempAmb"
+        android:layout_width="85dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginTop="80dp"
+        app:layout_constraintStart_toEndOf="@+id/labelTempA"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnDisminuirT"
+        android:layout_width="27dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="159dp"
+        android:src="@android:drawable/arrow_down_float"
+        app:layout_constraintStart_toEndOf="@+id/txtUmbral"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnAumentarT"
+        android:layout_width="27dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="17dp"
+        android:layout_marginTop="159dp"
+        android:src="@android:drawable/arrow_up_float"
+        app:layout_constraintStart_toEndOf="@+id/btnDisminuirT"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnAumentarV"
+        android:layout_width="27dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="58dp"
+        android:src="@android:drawable/arrow_up_float"
+        app:layout_constraintStart_toEndOf="@+id/btnDismV"
+        app:layout_constraintTop_toBottomOf="@+id/btnAumentarT" />
+
+    <ImageButton
+        android:id="@+id/btnDismV"
+        android:layout_width="27dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="58dp"
+        android:src="@android:drawable/arrow_down_float"
+        app:layout_constraintStart_toEndOf="@+id/txtVel"
+        app:layout_constraintTop_toBottomOf="@+id/btnDisminuirT" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

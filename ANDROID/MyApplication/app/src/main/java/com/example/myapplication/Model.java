@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import android.os.Handler;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -11,8 +13,9 @@ public class Model implements Contract.Model {
     private final int UMBRAL_INICIAL = 24;
     private final int  VEL_MAX = 3;
     private final int  VEL_MIN = 1;
+    private final int intervalTempoMillis = 1000;
 
-
+    private Handler handler = new Handler(); // En esta zona creamos el objeto Handler
     private int umbralTermo= UMBRAL_INICIAL;
     private int tempActual;
     private int vel=VEL_MIN;
@@ -75,7 +78,15 @@ public class Model implements Contract.Model {
     @Override
     public void getTempAmbiente(final OnEventListener listener) {
         //tomar valor del sensor tmp36
-        this.tempActual = 0;
-        listener.onEventTempAmbiente(tempActual);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                listener.onEventTempAmbiente(tempActual); // función para refrescar temperatura ambiente
+                tempActual++;
+                handler.postDelayed(this, intervalTempoMillis);
+            }
+
+        }, intervalTempoMillis);
+
     }
 }

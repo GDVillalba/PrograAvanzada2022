@@ -23,7 +23,7 @@ public class mainIngresar extends Activity{
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(mainIngresar.this, mPrincipal_act.class);
-                //se inicia la activity principal
+                //se inicia la activity de ingreso session
                 startActivity(intent);
             }
         });

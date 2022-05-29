@@ -22,7 +22,7 @@ public class mainIngresar extends Activity{
         this.btnIngresar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(mainIngresar.this, mPrincipal_act.class);
+                Intent intent=new Intent(mainIngresar.this, bt_activity.class);
                 //se inicia la activity de ingreso session
                 startActivity(intent);
             }

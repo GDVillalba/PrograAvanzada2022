@@ -28,7 +28,7 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
 
     @Override
     public void btnDisminuirV() {
-        model.DisminuirVel(this);
+        model.disminuirVel(this);
     }
 
     @Override

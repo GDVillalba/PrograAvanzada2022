@@ -11,7 +11,7 @@ public interface Contract {
 
     interface Model {
 
-        void DisminuirVel(Contract.Model.OnEventListener listener);
+        void disminuirVel(Contract.Model.OnEventListener listener);
 
         void aumentarVel(Contract.Model.OnEventListener listener);
 

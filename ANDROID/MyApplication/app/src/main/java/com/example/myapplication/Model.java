@@ -2,10 +2,6 @@ package com.example.myapplication;
 
 import android.os.Handler;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 public class Model implements Contract.Model {
 
     private final int MAX_UMBRAL = 34;
@@ -22,7 +18,7 @@ public class Model implements Contract.Model {
     private boolean encendido=false;
 
     @Override
-    public void DisminuirVel(Contract.Model.OnEventListener listener) {
+    public void disminuirVel(Contract.Model.OnEventListener listener) {
         if(encendido){
             vel--;
             if(vel < VEL_MIN) vel = VEL_MIN;

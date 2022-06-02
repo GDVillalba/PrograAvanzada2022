@@ -151,6 +151,7 @@ public class Model implements Contract.Model {
             vel++;
             if(vel > VEL_MAX) vel = VEL_MAX;
             listener.onEventVel(vel);
+            mConnectedThread.write("1");
         }
     }
 

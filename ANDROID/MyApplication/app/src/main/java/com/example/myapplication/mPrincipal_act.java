@@ -30,16 +30,18 @@ public class mPrincipal_act extends Activity implements Contract.View{
     private TextView txtT;
     private TextView txtTmp;
     private Switch off_on;
+
+    private String address;
+    /*
     Handler bluetoothIn;
     final int handlerState = 0; //used to identify handler message
     private StringBuilder recDataString = new StringBuilder();
     private BluetoothAdapter btAdapter;
-    private String address;
     private BluetoothSocket btSocket;
     // SPP UUID service  - Funciona en la mayoria de los dispositivos
     private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private ConnectedThread mConnectedThread;
-
+    */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,9 +54,11 @@ public class mPrincipal_act extends Activity implements Contract.View{
         this.txtV               = findViewById(R.id.txtVel);
         this.txtTmp             = findViewById(R.id.txtTempAmb);
         this.off_on             = findViewById(R.id.off_on);
-        this.p                  = new Presenter(this,new Model());
-        bluetoothIn = Handler_Msg_Hilo_Principal();
-        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        Model m = new Model();
+        this.p                  = new Presenter(this,m);
+        m.setPresenter(p);
+        //bluetoothIn = Handler_Msg_Hilo_Principal();
+        //btAdapter = BluetoothAdapter.getDefaultAdapter();
         this.off_on.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -96,14 +100,13 @@ public class mPrincipal_act extends Activity implements Contract.View{
     //socketBluethoot
     public void onResume() {
         super.onResume();
-
-        //Obtengo el parametro, aplicando un Bundle, que me indica la Mac Adress del HC05
         Intent intent=getIntent();
         Bundle extras=intent.getExtras();
-
         address= extras.getString("Direccion_Bluethoot");
-        showToast( "dato  "+address);
-        BluetoothDevice device = btAdapter.getRemoteDevice(address);
+        boolean conectado = p.conectarBT(address);
+        //Obtengo el parametro, aplicando un Bundle, que me indica la Mac Adress del HC05
+        showToast( "BT conectado ? :  "+conectado);
+        /*BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
         //se realiza la conexion del Bluethoot crea y se conectandose a atraves de un socket
         try
@@ -136,16 +139,16 @@ public class mPrincipal_act extends Activity implements Contract.View{
         // los datos de Arduino atraves del bluethoot
         mConnectedThread = new ConnectedThread(btSocket);
         mConnectedThread.start();
-
+        */
         //I send a character when resuming.beginning transmission to check device is connected
         //If it is not an exception will be thrown in the write method and finish() will be called
         //mConnectedThread.write("x");
     }
     //Metodo que crea el socket bluethoot
-    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+    /*private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
 
         return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
-    }
+    }*/
     @Override
     public void mostrarVel(int str){
         this.txtV.setText(Integer.toString(str));
@@ -168,6 +171,7 @@ public class mPrincipal_act extends Activity implements Contract.View{
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
+    /*
     //Handler que sirve que permite mostrar datos en el Layout al hilo secundario
     @SuppressLint("HandlerLeak")
     private Handler Handler_Msg_Hilo_Principal ()
@@ -258,5 +262,5 @@ public class mPrincipal_act extends Activity implements Contract.View{
 
             }
         }
-    }
+    }*/
 }

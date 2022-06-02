@@ -1,5 +1,9 @@
 package com.example.myapplication;
 
+import android.bluetooth.BluetoothDevice;
+
+import java.io.IOException;
+
 public class Presenter implements Contract.Presenter, Contract.Model.OnEventListener{
 
     private Contract.View mainView;
@@ -47,6 +51,11 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
     }
 
     @Override
+    public boolean conectarBT(String address) {
+        return this.model.conectarBT(this,address);
+    }
+
+    @Override
     public void onEventVel(int string){
         if(mainView != null){
             mainView.mostrarVel(string);
@@ -60,7 +69,7 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
         }
     }
     @Override
-    public void onEventUmbral(int string) {
+     public void onEventUmbral(int string) {
         if(mainView != null){
             mainView.mostrarUmbralTermo(string);
         }

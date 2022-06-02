@@ -24,6 +24,8 @@ public interface Contract {
 
         void getTempAmbiente(Contract.Model.OnEventListener listener);
 
+        boolean conectarBT(Contract.Model.OnEventListener listener, String address);
+
         interface OnEventListener {
             void onEventVel(int string);
             void onEventTempAmbiente(int string);
@@ -39,5 +41,7 @@ public interface Contract {
         void encender();
         void apagar();
         void onDestroy();
+
+        boolean conectarBT(String address);
     }
 }

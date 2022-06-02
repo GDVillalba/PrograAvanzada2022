@@ -118,9 +118,9 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
             String[] str = elementodeLista.split("\n");
             String macDisp = str[1];
             showToast(macDisp);
-            //Intent intent = new Intent(bt_activity.this, mPrincipal_act.class);
-            //intent.putExtra("Direccion_Bluethoot", macDisp);
-            //startActivity(intent);
+            Intent intent = new Intent(bt_activity.this, mPrincipal_act.class);
+            intent.putExtra("Direccion_Bluethoot", macDisp);
+            startActivity(intent);
         }
     };
 

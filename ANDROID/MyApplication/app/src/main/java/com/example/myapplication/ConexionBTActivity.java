@@ -26,16 +26,16 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT {
+public class ConexionBTActivity extends AppCompatActivity implements BTDefC.ViewBT {
     private ListView mListView;
     private TextView txtEstado;
     private Button btnConectar;
     private Button btnActualizar;
     private ProgressDialog mProgressDlg;
     private Switch sw_bt_on_off;
-    private BTPresenter BT = null;
+    private HandlerBTP BT = null;
     private ArrayAdapter<String> mPaired;
-
+    public static final String CODE_ADDRESS = "Direccion_Bluethoot";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +46,7 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
         this.txtEstado = findViewById(R.id.textEstado);
         this.sw_bt_on_off = findViewById(R.id.switch_bt_on_off);
         //Se crea un adaptador para podermanejar el bluethoot del celular
-        this.BT = new BTPresenter(this,new BT());
+        this.BT = new HandlerBTP(this,new EngineBTM());
         mProgressDlg = new ProgressDialog(this);
         mProgressDlg.setMessage("Buscando dispositivos...");
         mProgressDlg.setCancelable(false);
@@ -57,26 +57,20 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
 
     protected void enableComponent() {
         //se determina si existe bluethoot en el celular
-        if (BT.isEnabled() ) {
+        if (!BT.isEnabled()) {
             //si el celular no soporta bluethoot
             showUnsupported();
+            BT.onEventShowDisabled();
         } else {
             //si el celular soporta bluethoot, se definen los listener para los botones de la activity
             btnConectar.setOnClickListener(btnEmparejarListener);
-            sw_bt_on_off.setOnClickListener(switch_on_off);
             btnActualizar.setOnClickListener(btnBuscarListener);
             mListView.setOnItemClickListener(listClickListener);
             mPaired = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
             mListView.setAdapter(mPaired);
-            //se determina si esta activado el bluethoot
-            if (BT.isEnabled()) {
-                //se informa si esta habilitado
-                BT.onEventShowEnabled();
-            } else {
-                //se informa si esta deshabilitado
-                BT.onEventShowDisabled();
-            }
+            BT.onEventShowEnabled();
         }
+        sw_bt_on_off.setOnClickListener(switch_on_off);
         //se definen un broadcastReceiver que captura el broadcast del SO cuando captura los siguientes eventos:
         IntentFilter filter = new IntentFilter();
 
@@ -97,7 +91,7 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
 
     private void showUnsupported() {
         txtEstado.setText("Bluetooth no es soportado por el dispositivo movil");
-        //showDisabled();
+
         BT.onEventShowDisabled();
     }
 
@@ -114,13 +108,7 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
     private AdapterView.OnItemClickListener listClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            String elementodeLista = (String) mListView.getItemAtPosition(position);
-            String[] str = elementodeLista.split("\n");
-            String macDisp = str[1];
-            showToast(macDisp);
-            Intent intent = new Intent(bt_activity.this, mPrincipal_act.class);
-            intent.putExtra("Direccion_Bluethoot", macDisp);
-            startActivity(intent);
+            BT.DispSelected((String) mListView.getItemAtPosition(position));
         }
     };
 
@@ -169,16 +157,23 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
         sw_bt_on_off.setChecked(false);
     }
 
+    @Override
+    public void showDispSelected(String nameDisp) {
+        txtEstado.setText(nameDisp);
+        txtEstado.setTextColor(Color.GREEN);
+    }
 
-    //Metodo que actua como Listener de los eventos que ocurren en los componentes graficos de la activty
     private View.OnClickListener btnEmparejarListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
+            String macDisp = BT.getMacSelected();
+            Intent intent = new Intent(ConexionBTActivity.this, SysEmbebidoActivity.class);
+            intent.putExtra(CODE_ADDRESS, macDisp);
+            startActivity(intent);
         }
     };
-    private DialogInterface.OnClickListener btnCancelarDialogListener = new DialogInterface.OnClickListener() {
 
+    private DialogInterface.OnClickListener btnCancelarDialogListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             BT.hideDialog();
@@ -226,7 +221,7 @@ public class bt_activity extends AppCompatActivity implements ContractBT.ViewBT 
                 }
                 // permissions list of don't granted permission
                 Toast.makeText(this, "ATENCION: La aplicacion no funcionara " +
-                        "correctamente debido a la falta de Permisos", Toast.LENGTH_LONG).show();
+                        "correctamente debido a la falta de Permisos\n"+perStr, Toast.LENGTH_LONG).show();
             }
             return;
         }

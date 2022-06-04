@@ -4,11 +4,11 @@ import android.content.Intent;
 
 import java.util.ArrayList;
 
-public class BTPresenter implements ContractBT.PresenterBT, ContractBT.ModelBT.OnEventListener{
-    private ContractBT.ViewBT mainView;
-    private ContractBT.ModelBT model;
+public class HandlerBTP implements BTDefC.PresenterBT, BTDefC.ModelBT.OnEventListener{
+    private BTDefC.ViewBT mainView;
+    private BTDefC.ModelBT model;
 
-    public BTPresenter(ContractBT.ViewBT mainView, ContractBT.ModelBT model){
+    public HandlerBTP(BTDefC.ViewBT mainView, BTDefC.ModelBT model){
         this.mainView = mainView;
         this.model = model;
     }
@@ -49,6 +49,11 @@ public class BTPresenter implements ContractBT.PresenterBT, ContractBT.ModelBT.O
     }
 
     @Override
+    public void onEventShowDispSelected(String str) {
+        this.mainView.showDispSelected(str);
+    }
+
+    @Override
     public void btnON() {
         this.model.on(this);
     }
@@ -60,7 +65,7 @@ public class BTPresenter implements ContractBT.PresenterBT, ContractBT.ModelBT.O
 
     @Override
     public boolean searchDevices() {
-        return this.model.startDiscovery();
+        return this.model.startDiscovery(this);
     }
     @Override
     public boolean cancelSearchDevices() {
@@ -83,6 +88,16 @@ public class BTPresenter implements ContractBT.PresenterBT, ContractBT.ModelBT.O
     @Override
     public int get_MULTIPLE_PERMISSIONS() {
         return this.model.get_MULTIPLE_PERMISSIONS();
+    }
+
+    @Override
+    public void DispSelected(String str) {
+        this.model.showDispSelected(this,str);
+    }
+
+    @Override
+    public String getMacSelected() {
+        return this.model.getMacSelected(this);
     }
 
 }

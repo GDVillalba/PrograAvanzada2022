@@ -10,8 +10,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-public class Model implements Contract.Model {
-
+public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
+    /*
     private final int MAX_UMBRAL = 34;
     private final int MIN_UMBRAL = 18;
     private final int UMBRAL_INICIAL = 24;
@@ -23,25 +23,31 @@ public class Model implements Contract.Model {
     private int umbralTermo= UMBRAL_INICIAL;
     private int tempActual;
     private int vel=VEL_MIN;
-    private boolean encendido=false;
+    */
 
-    //VARIABLES PARA EL MANEJO DE LA CONEXIÓN BT
+    public static final String CODE_AUMENTAR_VEL="1";
+    public static final String CODE_DISMINUIR_UMBRAL="2";
+    public static final String CODE_AUMENTAR_UMBRAL="3";
+    private boolean sysOn =false;
+    private boolean corriendo = true;
+
+    //VARIABLES PARA EL MANEJO DE LA CONEXIÓN EngineBTM
     final int handlerState = 0; //used to identify handler message
     private StringBuilder recDataString = new StringBuilder();
     private String address;
     private BluetoothSocket btSocket;
     Handler bluetoothIn = Handler_Msg_Hilo_Principal();
     private BluetoothAdapter btAdapter= BluetoothAdapter.getDefaultAdapter();
-    // SPP UUID service  - Funciona en la mayoria de los dispositivos
     private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private ConnectedThread mConnectedThread;
-    private Presenter p;
+    private HandlerSysEmbebidoP p;
+    private boolean socketConectado = false;
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
     }
 
-    public void setPresenter(Presenter p ){
+    public void setPresenter(HandlerSysEmbebidoP p ){
         this.p = p ;
     }
     private Handler Handler_Msg_Hilo_Principal ()
@@ -55,16 +61,15 @@ public class Model implements Contract.Model {
                     //voy concatenando el msj
                     String readMessage = (String) msg.obj;
                     recDataString.append(readMessage);
-                    int endOfLineIndex = recDataString.indexOf("\r\n");
+                    int endOfLineIndex = recDataString.indexOf("|");
 
                     //cuando recibo toda una linea la muestro en el layout
                     if (endOfLineIndex > 0)
                     {
-
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);
-                        p.onEventVel(Integer.getInteger(dataInPrint));
-                        p.onEventUmbral(Integer.getInteger(dataInPrint));
-                        p.onEventTempAmbiente(Integer.getInteger(dataInPrint));
+                        p.onEventVel(dataInPrint);
+                        p.onEventUmbral(dataInPrint);
+                        p.onEventTempAmbiente(dataInPrint);
                         recDataString.delete(0, recDataString.length());
                     }
                 }
@@ -104,7 +109,7 @@ public class Model implements Contract.Model {
             int bytes;
 
             //el hilo secundario se queda esperando mensajes del HC05
-            while (true)
+            while (corriendo)
             {
                 try
                 {
@@ -116,117 +121,104 @@ public class Model implements Contract.Model {
                     // principal antes mencionado
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                 } catch (IOException e) {
-                    break;
+                    p.alert("Error inesperado al recibir\n respuesta del Dispositivo BT!\n"+e);
                 }
             }
         }
 
 
         //write method
-        public void write(String input) {
+        public void write(String input,final OnEventListener listener) {
             byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
             try {
                 mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
             } catch (IOException e) {
-                //if you cannot write, close the application
-                //showToast("La conexion fallo");
-                //finish();
-
+                listener.alert("Error al enviar el mensaje al dispositivo BT!\n"+e);
             }
-        }
-    }
-
-    @Override
-    public void disminuirVel(Contract.Model.OnEventListener listener) {
-        if(encendido){
-            vel--;
-            if(vel < VEL_MIN) vel = VEL_MIN;
-            listener.onEventVel(vel);
         }
     }
 
     @Override
     public void aumentarVel(final OnEventListener listener) {
-        if(encendido){
-            vel++;
-            if(vel > VEL_MAX) vel = VEL_MAX;
-            listener.onEventVel(vel);
-            mConnectedThread.write("1");
+        if(sysIsOn(listener)){
+            mConnectedThread.write(CODE_AUMENTAR_VEL,listener);
         }
     }
 
     @Override
     public void disminuirUmbralTermo(final OnEventListener listener) {
-        if(encendido){
-            umbralTermo--;
-            if(umbralTermo < MIN_UMBRAL) umbralTermo = MIN_UMBRAL;
-            listener.onEventUmbral(umbralTermo);
+        if(sysIsOn(listener)){
+            mConnectedThread.write(CODE_DISMINUIR_UMBRAL,listener);
         }
     }
 
     @Override
     public void aumentarUmbralTermo(final OnEventListener listener) {
-        if(encendido){
-            umbralTermo++;
-            if(umbralTermo > MAX_UMBRAL) umbralTermo = MAX_UMBRAL;
-            listener.onEventUmbral(umbralTermo);
+        if(sysIsOn(listener)){
+            mConnectedThread.write(CODE_AUMENTAR_UMBRAL,listener);
         }
-
     }
     @Override
     public void apagarSys(final OnEventListener listener) {
-        listener.onEventUmbral(0);
-        listener.onEventVel(0);
-        encendido = false;
+        listener.onEventUmbral("");
+        listener.onEventVel("");
+        sysOn = false;
     }
 
     @Override
     public void encenderSys(final OnEventListener listener) {
-        this.umbralTermo = UMBRAL_INICIAL;
-        this.vel=VEL_MIN;
-        listener.onEventUmbral(umbralTermo);
-        listener.onEventVel(vel);
-        encendido = true;
-    }
-
-    @Override
-    public void getTempAmbiente(final OnEventListener listener) {
-        //tomar valor del sensor tmp36
-        /*handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                mConnectedThread.write("0");
-                listener.onEventTempAmbiente(tempActual); // función para refrescar temperatura ambiente
-                tempActual++;
-                handler.postDelayed(this, intervalTempoMillis);
-            }
-
-        }, intervalTempoMillis);*/
+        sysOn = true;
     }
 
     @Override
     public boolean conectarBT(final OnEventListener listener, String address) {
+        this.address = address;
         BluetoothDevice device = btAdapter.getRemoteDevice(address);
-        boolean conectado = false;
         //se realiza la conexion del Bluethoot crea y se conectandose a atraves de un socket
-        try
-        {
+        try{
             btSocket = createBluetoothSocket(device);
             btSocket.connect();
-            conectado = true;
+            socketConectado = true;
         }catch (IOException e){
+
+            listener.alert("Conexión con dispositivo BT fallida!");
+
             try {
                 btSocket.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                listener.alert("No pudo resolver el cierre final de conexión BT");
             }
         }
 
         //Una establecida la conexion con el Hc05 se crea el hilo secundario, el cual va a recibir
         // los datos de Arduino atraves del bluethoot
-        mConnectedThread = new ConnectedThread(btSocket);
-        mConnectedThread.start();
-        return conectado;
+        if(socketConectado){
+            mConnectedThread = new ConnectedThread(btSocket);
+            mConnectedThread.start();
+        }
+        return btSocket.isConnected();
+    }
+
+    @Override
+    public void onDestroy(final OnEventListener listener) {
+        this.corriendo = false;
+        this.socketConectado = false;
+        try {
+            btSocket.close();
+        } catch (IOException ex) {
+            listener.alert("El Sistema no pudo cerrarse correctamente ! "+ex);
+        }
+    }
+
+    @Override
+    public boolean isBTConnectado(OnEventListener listener) {
+        return socketConectado;
+    }
+
+    public boolean sysIsOn(final OnEventListener listener){
+        if(!sysOn){
+            listener.alert("El Sistema se encuentra apagado !");
+        }
+        return sysOn;
     }
 }

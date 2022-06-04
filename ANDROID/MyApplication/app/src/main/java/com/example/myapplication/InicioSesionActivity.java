@@ -6,13 +6,12 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-public class mainIngresar extends Activity{
+public class InicioSesionActivity extends Activity{
     private Button btnIngresar;
     private TextView labelEmail;
     private TextView labelPass;
-    Presenter presenter;
+    HandlerSysEmbebidoP handlerSysEmbebidoP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +21,7 @@ public class mainIngresar extends Activity{
         this.btnIngresar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(mainIngresar.this, bt_activity.class);
+                Intent intent=new Intent(InicioSesionActivity.this, ConexionBTActivity.class);
                 //se inicia la activity de ingreso session
                 startActivity(intent);
             }

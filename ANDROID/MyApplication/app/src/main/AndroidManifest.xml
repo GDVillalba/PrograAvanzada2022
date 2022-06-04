@@ -24,14 +24,14 @@
         android:theme="@style/Theme.MyApplication"
         tools:targetApi="31">
         <activity
-            android:name=".bt_activity"
+            android:name=".ConexionBTActivity"
             android:exported="false" />
         <activity
-            android:name=".mPrincipal_act"
+            android:name=".SysEmbebidoActivity"
             android:exported="false"
             tools:ignore="MissingClass" />
         <activity
-            android:name=".mainIngresar"
+            android:name=".InicioSesionActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

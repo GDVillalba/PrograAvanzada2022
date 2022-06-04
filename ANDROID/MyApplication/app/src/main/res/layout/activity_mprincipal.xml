@@ -5,7 +5,7 @@
     android:id="@+id/btnDisminuirV"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".mPrincipal_act">
+    tools:context=".SysEmbebidoActivity">
 
     <TextView
         android:id="@+id/txtUmbral"
@@ -76,42 +76,32 @@
 
     <ImageButton
         android:id="@+id/btnDisminuirT"
-        android:layout_width="27dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="159dp"
+        android:layout_width="40dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="156dp"
         android:src="@android:drawable/arrow_down_float"
         app:layout_constraintStart_toEndOf="@+id/txtUmbral"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/btnAumentarT"
-        android:layout_width="27dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="17dp"
-        android:layout_marginTop="159dp"
+        android:layout_width="40dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="156dp"
         android:src="@android:drawable/arrow_up_float"
         app:layout_constraintStart_toEndOf="@+id/btnDisminuirT"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
         android:id="@+id/btnAumentarV"
-        android:layout_width="27dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="58dp"
+        android:layout_width="40dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="52dp"
         android:src="@android:drawable/arrow_up_float"
-        app:layout_constraintStart_toEndOf="@+id/btnDismV"
-        app:layout_constraintTop_toBottomOf="@+id/btnAumentarT" />
-
-    <ImageButton
-        android:id="@+id/btnDismV"
-        android:layout_width="27dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="58dp"
-        android:src="@android:drawable/arrow_down_float"
         app:layout_constraintStart_toEndOf="@+id/txtVel"
-        app:layout_constraintTop_toBottomOf="@+id/btnDisminuirT" />
+        app:layout_constraintTop_toBottomOf="@+id/btnAumentarT" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

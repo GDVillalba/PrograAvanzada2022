@@ -1,18 +1,18 @@
 package com.example.myapplication;
 
-import android.bluetooth.BluetoothDevice;
+public class HandlerSysEmbebidoP implements SysEmbebidoC.Presenter, SysEmbebidoC.Model.OnEventListener{
 
-import java.io.IOException;
+    private SysEmbebidoC.View mainView;
+    private SysEmbebidoC.Model model;
 
-public class Presenter implements Contract.Presenter, Contract.Model.OnEventListener{
-
-    private Contract.View mainView;
-    private Contract.Model model;
-
-    public Presenter(Contract.View mainView, Contract.Model model){
+    public HandlerSysEmbebidoP(SysEmbebidoC.View mainView, SysEmbebidoC.Model model){
         this.mainView = mainView;
         this.model = model;
-        this.model.getTempAmbiente(this);
+    }
+
+    @Override
+    public boolean isBTConnectado() {
+        return this.model.isBTConnectado(this);
     }
 
     @Override
@@ -31,11 +31,6 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
     }
 
     @Override
-    public void btnDisminuirV() {
-        model.disminuirVel(this);
-    }
-
-    @Override
     public void encender() {
         model.encenderSys(this);
     }
@@ -47,6 +42,7 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
 
     @Override
     public void onDestroy() {
+        this.model.onDestroy(this);
         mainView = null;
     }
 
@@ -56,22 +52,29 @@ public class Presenter implements Contract.Presenter, Contract.Model.OnEventList
     }
 
     @Override
-    public void onEventVel(int string){
+    public void onEventVel(String string){
         if(mainView != null){
             mainView.mostrarVel(string);
         }
     }
 
     @Override
-    public void onEventTempAmbiente(int string) {
+    public void onEventTempAmbiente(String string) {
         if(mainView != null){
             mainView.mostrarTempAmbiente(string);
         }
     }
     @Override
-     public void onEventUmbral(int string) {
+     public void onEventUmbral(String string) {
         if(mainView != null){
             mainView.mostrarUmbralTermo(string);
+        }
+    }
+
+    @Override
+    public void alert(String s) {
+        if(mainView != null){
+            this.mainView.showToast(s);
         }
     }
 }

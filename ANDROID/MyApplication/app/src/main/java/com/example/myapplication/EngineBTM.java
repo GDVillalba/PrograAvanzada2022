@@ -8,7 +8,7 @@ import android.content.Intent;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class BT implements ContractBT.ModelBT{
+public class EngineBTM implements BTDefC.ModelBT{
     public static final int MULTIPLE_PERMISSIONS = 10; // code you want.
     private BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
     private String[] permissions = new String[]{
@@ -21,6 +21,7 @@ public class BT implements ContractBT.ModelBT{
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION};
+    private String macDisp= "";
 
     @Override
     public ArrayList<String> getDevicesFounded(){
@@ -37,12 +38,13 @@ public class BT implements ContractBT.ModelBT{
         return btAdapter.isEnabled();
     }
     @Override
-    public void off(final ContractBT.ModelBT.OnEventListener listener){
+    public void off(final BTDefC.ModelBT.OnEventListener listener){
         btAdapter.disable();
         listener.onEventShowDisabled();
     }
     @Override
-    public boolean startDiscovery(){
+    public boolean startDiscovery(final OnEventListener listener){
+        listener.onEventShowDialog();
         return  btAdapter.startDiscovery();
     }
     @Override
@@ -50,7 +52,7 @@ public class BT implements ContractBT.ModelBT{
         return btAdapter.cancelDiscovery();
     }
     @Override
-    public void on(final ContractBT.ModelBT.OnEventListener listener){
+    public void on(final BTDefC.ModelBT.OnEventListener listener){
         listener.onEventOnBT();
     }
     @Override
@@ -59,7 +61,7 @@ public class BT implements ContractBT.ModelBT{
     }
 
     @Override
-    public void onReceive(final ContractBT.ModelBT.OnEventListener listener, Intent intent) {
+    public void onReceive(final BTDefC.ModelBT.OnEventListener listener, Intent intent) {
         //Atraves del Intent obtengo el evento de Bluethoot que informo el broadcast del SO
         String action = intent.getAction();
 
@@ -90,5 +92,15 @@ public class BT implements ContractBT.ModelBT{
         return this.MULTIPLE_PERMISSIONS;
     }
 
+    @Override
+    public void showDispSelected(OnEventListener listener, String str) {
+        String[] str1 = str.split("\n");
+        this.macDisp = str1[1];
+        listener.onEventShowDispSelected(str1[0]);
+    }
 
+    @Override
+    public String getMacSelected(OnEventListener listener) {
+        return macDisp;
+    }
 }

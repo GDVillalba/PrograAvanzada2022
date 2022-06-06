@@ -1,18 +1,11 @@
 package com.example.myapplication;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-
 public class InicioSesionActivity extends Activity{
     private Button btnIngresar;
-    private TextView labelEmail;
-    private TextView labelPass;
-    HandlerSysEmbebidoP handlerSysEmbebidoP;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,5 +19,6 @@ public class InicioSesionActivity extends Activity{
                 startActivity(intent);
             }
         });
+
     }
 }

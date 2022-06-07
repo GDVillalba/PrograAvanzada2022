@@ -74,7 +74,6 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
                         while (endOfLineIndex > 0) {
 
                             dataInPrint = new String(recDataString.substring(0, endOfLineIndex));
-                            //recDataString.delete(0,)
                             switch (dataInPrint.substring(0, 1)) {
                                 case CODE_TEMPERATURA:
                                     p.onEventTempAmbiente(dataInPrint.substring(1));
@@ -84,7 +83,6 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
                                         p.onEventReposar();
                                     if (dataInPrint.substring(1, 2).compareTo(CODE_ACTIVO) == 0) {
                                         p.onEventActivar();
-                                        //p.iniciarSys();
                                     }
                                     break;
                                 case CODE_AUMENTAR_VEL:
@@ -99,15 +97,10 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
                                 default:
                                     break;
                             }
-                            //p.onEventVel(recDataString.toString());
+                            //saca del inicio de recDataString la orden ya ejecutada
                             recDataString.delete(0, endOfLineIndex + 1);
                             endOfLineIndex = recDataString.indexOf("~");
                         }
-
-                        //recDataString.delete(0,endOfLineIndex);
-                        //p.onEventUmbral(recDataString.toString());
-                        //p.onEventTempAmbiente(dataInPrint);
-                        //recDataString.delete(0, recDataString.length());
                     }
                 }
             }
@@ -144,6 +137,7 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
         //metodo run del hilo, que va a entrar en una espera activa para recibir los msjs del HC05 / HC06
         public void run()
         {
+            //Pide al arduino los estados iniciales de temperatura, termostato , velocidad y estado
             p.iniciarSys();
 
             byte[] buffer = new byte[256];
@@ -219,15 +213,12 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
 
     @Override
     public void apagarSys(final OnEventListener listener) {
-        //listener.onEventUmbral("");
-        //listener.onEventVel("");
-        //sysOn = false;
+        sysOn = false;
     }
 
     @Override
     public void encenderSys(final OnEventListener listener) {
         sysOn = true;
-        //mConnectedThread.write(CODE_INIT,listener);
     }
 
     @Override

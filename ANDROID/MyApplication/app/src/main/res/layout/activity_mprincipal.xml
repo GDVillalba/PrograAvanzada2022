@@ -65,16 +65,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtVel" />
 
-    <Button
-        android:id="@+id/btn_off_on"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="48dp"
-        android:text="OFF/ON"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/off_on" />
-
     <TextView
         android:id="@+id/txtTempAmb"
         android:layout_width="85dp"

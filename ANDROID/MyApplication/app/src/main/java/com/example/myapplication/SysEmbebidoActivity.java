@@ -15,7 +15,6 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     private ImageButton btnAumentarVel;
     private ImageButton btnAumentarTermo;
     private ImageButton btnDisminuirTermo;
-    private Button btnOffOn;
     private static HandlerSysEmbebidoP p;
     private TextView txtV;
     private TextView txtT;
@@ -39,19 +38,9 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         this.txtV               = findViewById(R.id.txtVel);
         this.txtTmp             = findViewById(R.id.txtTempAmb);
         this.off_on             = findViewById(R.id.off_on);
-        this.btnOffOn           = findViewById(R.id.btn_off_on);
         EngineSysEmbebidoM m    = new EngineSysEmbebidoM();
         this.p                  = new HandlerSysEmbebidoP(this,m);
         m.setPresenter(p);
-
-        this.btnOffOn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                //off_on.setSelected(true);
-                off_on.setChecked(true);
-                //off_on.toggle();
-            }
-        });
 
         this.off_on.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -92,18 +81,17 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     @Override
     public void reposar(){
         off_on.setChecked(false);
-        txtT.setForeground(new ColorDrawable(0x00FF6666) );
-        txtT.setForeground(new ColorDrawable(0x00FF6666) );
+        //Oculta el texto de velocidad y termostato
+        txtT.setTextColor( Color.argb(0,255,255,255));
+        txtV.setTextColor( Color.argb(0,255,255,255));
         p.reposarSys();
     }
     @Override
     public void activar() {
         off_on.setChecked(true);
-        txtT.setForeground(new ColorDrawable(0xFFFF6666) );
-        txtT.setForeground(new ColorDrawable(0xFFFF6666) );
-        //off_on.setSelected(true);
-        //p.iniciarSys();
-        //off_on.toggle();
+        //Hace visible el texto de velocidad y termostato
+        txtT.setTextColor( Color.argb(255,255,255,255));
+        txtV.setTextColor( Color.argb(255,255,255,255));
         p.activarSys();
     }
     @Override

@@ -1,6 +1,8 @@
 package com.example.myapplication;
 
 
+import android.hardware.SensorManager;
+
 public interface SysEmbebidoC {
 
     interface View {
@@ -10,6 +12,8 @@ public interface SysEmbebidoC {
         void mostrarVel(String string);
         void mostrarTempAmbiente(String string);
         void showToast(String str);
+        SensorManager getSensorManager();
+        void receiveSensor();
     }
 
     interface Model {

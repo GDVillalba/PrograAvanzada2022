@@ -2,10 +2,9 @@ package com.example.myapplication;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -21,6 +20,7 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     private TextView txtTmp;
     private Switch off_on;
     private String address;
+    private SensorProximidad sensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +29,7 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         Intent intent=getIntent();
         Bundle extras=intent.getExtras();
         address= extras.getString(ConexionBTActivity.CODE_ADDRESS);
-
+        sensor= new SensorProximidad(this);
         setContentView(R.layout.activity_mprincipal);
         this.btnAumentarTermo   = findViewById(R.id.btnAumentarT);
         this.btnDisminuirTermo  = findViewById(R.id.btnDisminuirT);
@@ -72,12 +72,18 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         });
     }
 
+    public void receiveSensor(){
+        p.btnAumentarV();
+    }
     @Override
     protected void onResume() {
         super.onResume();
         if(!p.isBTConnectado()) p.conectarBT(address);
     }
-
+    @Override
+    public SensorManager getSensorManager( ){
+        return (SensorManager) getSystemService(SENSOR_SERVICE);
+    }
     @Override
     public void reposar(){
         off_on.setChecked(false);
@@ -111,6 +117,7 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     protected void onDestroy() {
         super.onDestroy();
         p.onDestroy();
+        sensor.Parar_Sensores();
     }
     @Override
     public void showToast(String message) {

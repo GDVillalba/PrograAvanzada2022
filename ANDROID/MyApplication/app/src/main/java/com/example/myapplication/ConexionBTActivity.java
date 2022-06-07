@@ -3,6 +3,8 @@ package com.example.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -32,6 +34,7 @@ public class ConexionBTActivity extends AppCompatActivity implements BTDefC.View
     private Button btnConectar;
     private Button btnActualizar;
     private ProgressDialog mProgressDlg;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch sw_bt_on_off;
     private HandlerBTP BT = null;
     private ArrayAdapter<String> mPaired;

@@ -1,13 +1,21 @@
 <resources>
-    <string name="app_name">My Application</string>
-    <string name="title_activity_main2">MainActivity2</string>
+    <string name="app_name">Cool FAN</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="bt_on_off">BT ON/OFF</string>
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_menu_princ">menu_princ</string>
+    <string name="btnInicioSesion">Ingresar</string>
+    <string name="hint_ingr_pass">Ingrese su contraseña</string>
+    <string name="hint_ingr_email">Ingrese su email</string>
+    <string name="actualizar">Buscar dispositivos</string>
+    <string name="conectar">Conectar</string>
+    <string name="estado">Estado</string>
+    <string name="velocidad_fan">Velocidad FAN</string>
+    <string name="umbral_termostato">Umbral Termostato</string>
+    <string name="temperatura_ambiente">Temperatura ambiente</string>
+    <string name="off_on">OFF/ON</string>
+    <string name="aumentar_velocidad">Aumentar Velocidad</string>
+    <string name="aumentar_umbral_termostato">Aumentar umbral Termostato</string>
+    <string name="disminuir_umbral_termostato">Disminuir umbral Termostato</string>
 </resources>

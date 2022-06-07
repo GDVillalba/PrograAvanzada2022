@@ -1,8 +1,11 @@
 package com.example.myapplication;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -12,7 +15,8 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     private ImageButton btnAumentarVel;
     private ImageButton btnAumentarTermo;
     private ImageButton btnDisminuirTermo;
-    private HandlerSysEmbebidoP p;
+    private Button btnOffOn;
+    private static HandlerSysEmbebidoP p;
     private TextView txtV;
     private TextView txtT;
     private TextView txtTmp;
@@ -35,16 +39,27 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         this.txtV               = findViewById(R.id.txtVel);
         this.txtTmp             = findViewById(R.id.txtTempAmb);
         this.off_on             = findViewById(R.id.off_on);
+        this.btnOffOn           = findViewById(R.id.btn_off_on);
         EngineSysEmbebidoM m    = new EngineSysEmbebidoM();
         this.p                  = new HandlerSysEmbebidoP(this,m);
         m.setPresenter(p);
+
+        this.btnOffOn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //off_on.setSelected(true);
+                off_on.setChecked(true);
+                //off_on.toggle();
+            }
+        });
+
         this.off_on.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(off_on.isChecked()){
-                    p.encender();
+                    p.btnEncender();
                 }else{
-                    p.apagar();
+                    p.btnApagar();
                 }
             }
         });
@@ -74,6 +89,23 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         if(!p.isBTConnectado()) p.conectarBT(address);
     }
 
+    @Override
+    public void reposar(){
+        off_on.setChecked(false);
+        txtT.setForeground(new ColorDrawable(0x00FF6666) );
+        txtT.setForeground(new ColorDrawable(0x00FF6666) );
+        p.reposarSys();
+    }
+    @Override
+    public void activar() {
+        off_on.setChecked(true);
+        txtT.setForeground(new ColorDrawable(0xFFFF6666) );
+        txtT.setForeground(new ColorDrawable(0xFFFF6666) );
+        //off_on.setSelected(true);
+        //p.iniciarSys();
+        //off_on.toggle();
+        p.activarSys();
+    }
     @Override
     public void mostrarVel(String str){
         this.txtV.setText(str);

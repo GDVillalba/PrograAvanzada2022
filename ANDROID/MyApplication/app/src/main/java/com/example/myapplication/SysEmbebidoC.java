@@ -4,6 +4,8 @@ package com.example.myapplication;
 public interface SysEmbebidoC {
 
     interface View {
+        void reposar();
+        void activar();
         void mostrarUmbralTermo(String string);
         void mostrarVel(String string);
         void mostrarTempAmbiente(String string);
@@ -11,7 +13,9 @@ public interface SysEmbebidoC {
     }
 
     interface Model {
-
+        void apagar(final OnEventListener listener);
+        void encender(final OnEventListener listener);
+        void inicializarValores(SysEmbebidoC.Model.OnEventListener listener);
         void aumentarVel(SysEmbebidoC.Model.OnEventListener listener);
         void disminuirUmbralTermo(SysEmbebidoC.Model.OnEventListener listener);
         void aumentarUmbralTermo(SysEmbebidoC.Model.OnEventListener listener);
@@ -21,6 +25,8 @@ public interface SysEmbebidoC {
         void onDestroy(SysEmbebidoC.Model.OnEventListener listener);
         boolean isBTConnectado(SysEmbebidoC.Model.OnEventListener listener);
         interface OnEventListener {
+            void onEventReposar();
+            void onEventActivar();
             void onEventVel(String string);
             void onEventTempAmbiente(String string);
             void onEventUmbral(String string);
@@ -33,8 +39,11 @@ public interface SysEmbebidoC {
         void btnAumentarT();
         void btnDisminuirT();
         void btnAumentarV();
-        void encender();
-        void apagar();
+        void btnEncender();
+        void btnApagar();
+        void iniciarSys();
+        void reposarSys();
+        void activarSys();
         void onDestroy();
         boolean conectarBT(String address);
     }

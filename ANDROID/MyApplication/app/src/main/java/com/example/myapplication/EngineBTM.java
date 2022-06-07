@@ -13,8 +13,8 @@ public class EngineBTM implements BTDefC.ModelBT{
     private BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
     private String[] permissions = new String[]{
             Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT,
+            //Manifest.permission.BLUETOOTH_SCAN,
+            //Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_PHONE_STATE,

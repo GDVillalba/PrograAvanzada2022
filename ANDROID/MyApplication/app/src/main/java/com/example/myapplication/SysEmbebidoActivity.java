@@ -1,8 +1,11 @@
 package com.example.myapplication;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -12,7 +15,7 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
     private ImageButton btnAumentarVel;
     private ImageButton btnAumentarTermo;
     private ImageButton btnDisminuirTermo;
-    private HandlerSysEmbebidoP p;
+    private static HandlerSysEmbebidoP p;
     private TextView txtV;
     private TextView txtT;
     private TextView txtTmp;
@@ -38,13 +41,14 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         EngineSysEmbebidoM m    = new EngineSysEmbebidoM();
         this.p                  = new HandlerSysEmbebidoP(this,m);
         m.setPresenter(p);
+
         this.off_on.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(off_on.isChecked()){
-                    p.encender();
+                    p.btnEncender();
                 }else{
-                    p.apagar();
+                    p.btnApagar();
                 }
             }
         });
@@ -74,6 +78,22 @@ public class SysEmbebidoActivity extends Activity implements SysEmbebidoC.View{
         if(!p.isBTConnectado()) p.conectarBT(address);
     }
 
+    @Override
+    public void reposar(){
+        off_on.setChecked(false);
+        //Oculta el texto de velocidad y termostato
+        txtT.setTextColor( Color.argb(0,255,255,255));
+        txtV.setTextColor( Color.argb(0,255,255,255));
+        p.reposarSys();
+    }
+    @Override
+    public void activar() {
+        off_on.setChecked(true);
+        //Hace visible el texto de velocidad y termostato
+        txtT.setTextColor( Color.argb(255,255,255,255));
+        txtV.setTextColor( Color.argb(255,255,255,255));
+        p.activarSys();
+    }
     @Override
     public void mostrarVel(String str){
         this.txtV.setText(str);

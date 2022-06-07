@@ -31,14 +31,19 @@ public class HandlerSysEmbebidoP implements SysEmbebidoC.Presenter, SysEmbebidoC
     }
 
     @Override
-    public void encender() {
-        model.encenderSys(this);
-    }
+    public void btnEncender() { model.encender(this); }
 
     @Override
-    public void apagar() {
-        model.apagarSys(this);
-    }
+    public void btnApagar() { model.apagar(this); }
+
+    @Override
+    public void iniciarSys() { model.inicializarValores(this); }
+
+    @Override
+    public void activarSys() { model.encenderSys(this); }
+
+    @Override
+    public void reposarSys() { model.apagarSys(this); }
 
     @Override
     public void onDestroy() {
@@ -49,6 +54,22 @@ public class HandlerSysEmbebidoP implements SysEmbebidoC.Presenter, SysEmbebidoC
     @Override
     public boolean conectarBT(String address) {
         return this.model.conectarBT(this,address);
+    }
+
+    @Override
+    public void onEventReposar(){
+        if(mainView != null){
+            mainView.reposar();
+        }
+    }
+
+    @Override
+    public void onEventActivar(){
+        if(mainView != null){
+            mainView.activar();
+            //this.iniciarSys();
+        }
+
     }
 
     @Override

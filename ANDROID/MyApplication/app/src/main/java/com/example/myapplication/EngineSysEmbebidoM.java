@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
+import android.os.Message;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,15 +26,20 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
     private int vel=VEL_MIN;
     */
 
-    public static final String CODE_AUMENTAR_VEL="1";
-    public static final String CODE_DISMINUIR_UMBRAL="2";
-    public static final String CODE_AUMENTAR_UMBRAL="3";
-    private boolean sysOn =false;
+    public static final String CODE_TEMPERATURA ="0";
+    public static final String CODE_ON_OFF="1";
+    public static final String CODE_AUMENTAR_VEL="2";
+    public static final String CODE_DISMINUIR_UMBRAL="3";
+    public static final String CODE_AUMENTAR_UMBRAL="4";
+    public static final String CODE_INIT ="5";
+    public static final String CODE_REPOSO ="0";
+    public static final String CODE_ACTIVO ="1";
+    private boolean sysOn =true;
     private boolean corriendo = true;
 
     //VARIABLES PARA EL MANEJO DE LA CONEXIÓN EngineBTM
     final int handlerState = 0; //used to identify handler message
-    private StringBuilder recDataString = new StringBuilder();
+    private static StringBuilder recDataString = new StringBuilder();
     private String address;
     private BluetoothSocket btSocket;
     Handler bluetoothIn = Handler_Msg_Hilo_Principal();
@@ -52,33 +58,58 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
     }
     private Handler Handler_Msg_Hilo_Principal ()
     {
-        return new Handler() {
-            public void handleMessage(android.os.Message msg)
-            {
+        Handler handler = new Handler() {
+            public void handleMessage(Message msg) {
                 //si se recibio un msj del hilo secundario
-                if (msg.what == handlerState)
-                {
+                if (msg.what == handlerState) {
                     //voy concatenando el msj
                     String readMessage = (String) msg.obj;
                     recDataString.append(readMessage);
-                    int endOfLineIndex = recDataString.indexOf("|");
+                    int endOfLineIndex = recDataString.indexOf("~");
+
 
                     //cuando recibo toda una linea la muestro en el layout
-                    if (endOfLineIndex > 0)
-                    {
-                        String dataInPrint = recDataString.substring(0, endOfLineIndex);
-                        p.onEventVel(dataInPrint);
-                        p.onEventUmbral(dataInPrint);
-                        p.onEventTempAmbiente(dataInPrint);
-                        recDataString.delete(0, recDataString.length());
+                    if (endOfLineIndex > 0) {
+                        String dataInPrint;
+                        while (endOfLineIndex > 0) {
+
+                            dataInPrint = new String(recDataString.substring(0, endOfLineIndex));
+                            switch (dataInPrint.substring(0, 1)) {
+                                case CODE_TEMPERATURA:
+                                    p.onEventTempAmbiente(dataInPrint.substring(1));
+                                    break;
+                                case CODE_ON_OFF:
+                                    if (dataInPrint.substring(1, 2).compareTo(CODE_REPOSO) == 0)
+                                        p.onEventReposar();
+                                    if (dataInPrint.substring(1, 2).compareTo(CODE_ACTIVO) == 0) {
+                                        p.onEventActivar();
+                                    }
+                                    break;
+                                case CODE_AUMENTAR_VEL:
+                                    p.onEventVel(dataInPrint.substring(1));
+                                    break;
+                                case CODE_DISMINUIR_UMBRAL:
+                                    p.onEventUmbral(dataInPrint.substring(1));
+                                    break;
+                                case CODE_AUMENTAR_UMBRAL:
+                                    p.onEventUmbral(dataInPrint.substring(1));
+                                    break;
+                                default:
+                                    break;
+                            }
+                            //saca del inicio de recDataString la orden ya ejecutada
+                            recDataString.delete(0, endOfLineIndex + 1);
+                            endOfLineIndex = recDataString.indexOf("~");
+                        }
                     }
                 }
             }
         };
+        return handler;
     }
 
     //******************************************** Hilo secundario del Activity**************************************
-    //*************************************** recibe los datos enviados por el HC05**********************************
+    //*************************************** recibe los datos enviados por el HC05/HC06*****************************
 
     private class ConnectedThread extends Thread
     {
@@ -100,15 +131,19 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+
         }
 
-        //metodo run del hilo, que va a entrar en una espera activa para recibir los msjs del HC05
+        //metodo run del hilo, que va a entrar en una espera activa para recibir los msjs del HC05 / HC06
         public void run()
         {
+            //Pide al arduino los estados iniciales de temperatura, termostato , velocidad y estado
+            p.iniciarSys();
+
             byte[] buffer = new byte[256];
             int bytes;
 
-            //el hilo secundario se queda esperando mensajes del HC05
+            //el hilo secundario se queda esperando mensajes del HC05 / HC06
             while (corriendo)
             {
                 try
@@ -139,6 +174,13 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
     }
 
     @Override
+    public void inicializarValores(final OnEventListener listener) {
+        if(sysIsOn(listener)){
+            mConnectedThread.write(CODE_INIT,listener);
+        }
+    }
+
+    @Override
     public void aumentarVel(final OnEventListener listener) {
         if(sysIsOn(listener)){
             mConnectedThread.write(CODE_AUMENTAR_VEL,listener);
@@ -158,10 +200,19 @@ public class EngineSysEmbebidoM implements SysEmbebidoC.Model {
             mConnectedThread.write(CODE_AUMENTAR_UMBRAL,listener);
         }
     }
+
+    @Override
+    public void apagar(final OnEventListener listener) {
+        mConnectedThread.write(CODE_ON_OFF,listener);
+    }
+
+    @Override
+    public void encender(final OnEventListener listener) {
+        mConnectedThread.write(CODE_ON_OFF,listener);
+    }
+
     @Override
     public void apagarSys(final OnEventListener listener) {
-        listener.onEventUmbral("");
-        listener.onEventVel("");
         sysOn = false;
     }
 
